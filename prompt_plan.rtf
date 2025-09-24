@@ -1,0 +1,334 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 .AppleSystemUIFontMonospaced-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red181\green0\blue19;\red151\green0\blue126;
+}
+{\*\expandedcolortbl;;\csgray\c0;\cssrgb\c76863\c10196\c8627;\cssrgb\c66667\c5098\c56863;
+}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs22 \cf2 content = \cf3 """# Blueprint\
+\
+## Goal\
+Single-page React app that **always** shows **today\'92s** hourly forecast **for Stockholm** (00:00\'9623:00 local time) in a static table. Units: **\'b0C, mm, m/s**. Locale/time: **sv-SE**, **24-h clock**, **Europe/Stockholm** timezone. **SMHI** as data source. **No geolocation or search**. **No loading indicator**. **Error state with \'93F\'f6rs\'f6k igen\'94**. **GitHub Pages** hosting.\
+\
+## Stack & Conventions\
+- **React (Vite, JS)** + **Tailwind**.\
+- **Vitest + React Testing Library** for tests (minimal but early).\
+- **ESLint + Prettier** (sane defaults).\
+- **Single component** (`App.jsx`) with small **internal helpers** (no extra modules).\
+- **No client storage** (always fetch fresh on load).\
+- **Icons** for `Wsymb2` are local assets (small starter set; can expand).\
+\
+## Architecture (single-file pattern)\
+- `App.jsx`:\
+  - UI: heading with Swedish date; table (caption, thead, tbody); footer \'93Data fr\'e5n SMHI\'94.\
+  - State: `rows`, `error`, `retryKey`.\
+  - Helpers (inside same file):\
+    - `formatHeadingDate(date)`: Swedish long date.\
+    - `formatHour(date)`: `HH:mm` in Europe/Stockholm.\
+    - `generateTodayHoursLocal()`: returns `Date[]` for every hour 00..23 (local).\
+    - `fetchSmhiForecast()`: network call for Stockholm coords.\
+    - `transformSmhiToRows(json)`: map `timeSeries` \uc0\u8594  rows aligned to today\'92s 24 hours; per hour pick: temp `t`, precip `pmean` (fallbacks ok), wind `ws`, humidity `r`, icon+label via `Wsymb2`.\
+  - Error handling: show error box + **\'93F\'f6rs\'f6k igen\'94** (increments `retryKey`).\
+\
+## Data & Logic\
+- **Coords**: `lat=59.3293`, `lon=18.0686`.\
+- **API**: SMHI **metfcst point** JSON (UTC timestamps). Convert to **Europe/Stockholm**.\
+- **Filtering**: Keep only entries whose local date == today (local).\
+- **Hourly alignment**: Ensure exactly 24 rows for 00..23. If missing, fill with `\'97`.\
+- **Columns**: `Tid`, `V\'e4der (ikon+label)`, `Temp (\'b0C)`, `Nederb\'f6rd (mm)`, `Vind (m/s)`, `Luftfuktighet (%)`.\
+- **A11y**: semantic table: `<caption>`, header `scope="col"`, icon `alt` text.\
+\
+## Deployment\
+- GitHub repo (main branch).\
+- GitHub Actions deploy to `gh-pages` (Vite build \uc0\u8594  dist).\
+- GitHub Pages enabled on `gh-pages` branch.\
+\
+## Risks & Mitigations\
+- **DST/timezone**: Always format with `Intl.DateTimeFormat('sv-SE', \{ timeZone: 'Europe/Stockholm' \})`.\
+- **SMHI shape variance**: Transform function tolerant to missing precip fields (fallback, then `\'97`).\
+- **Icon set**: Start with a minimal set (e.g., codes 1\'967) to unblock UI; map missing codes to a generic icon.\
+\
+---\
+\
+# Iterative Chunks (Milestones)\
+\
+1) **Scaffold & Tooling**  \
+Vite React app; Tailwind; Vitest/RTL; ESLint/Prettier; basic App renders.\
+\
+2) **Layout & Locale Basics**  \
+Static heading (Swedish date), empty table skeleton with headers, footer.\
+\
+3) **Time Utilities**  \
+Helpers for `formatHeadingDate`, `formatHour`, `generateTodayHoursLocal` (24 items).\
+\
+4) **Table with Mock Rows (24h)**  \
+Render 24 mock rows (00:00\'9623:00) with placeholders.\
+\
+5) **SMHI Transform (Pure)**  \
+Implement `transformSmhiToRows` (pure fn) with a JSON fixture; unit tests.\
+\
+6) **Fetch & Integrate**  \
+`fetchSmhiForecast` + integrate on mount; render transformed rows; handle missing cells as `\'97`.\
+\
+7) **Wsymb2 Mapping & Icons**  \
+Local assets, mapping object, alt labels; integrate into `V\'e4der` column.\
+\
+8) **Error & Retry**  \
+Simulate fetch failure; show error box; \'93F\'f6rs\'f6k igen\'94 retries.\
+\
+9) **A11y & Polish**  \
+Caption, alignment, zebra stripes, right-align numeric, confirm Swedish locale.\
+\
+10) **Deploy**  \
+GH Actions workflow for Pages; verify build & publish.\
+\
+---\
+\
+# Break Each Chunk Into Small Steps\
+\
+## 1) Scaffold & Tooling\
+- Init Vite (React, JS).\
+- Add Tailwind config & base styles.\
+- Add Vitest + RTL config.\
+- Add ESLint + Prettier.\
+- Smoke test: `App.jsx` renders \'93App\'94.\
+\
+## 2) Layout & Locale Basics\
+- Render heading using `Intl.DateTimeFormat` (sv-SE, Europe/Stockholm).\
+- Add table skeleton: caption, thead with 6 headers, empty tbody.\
+- Footer \'93Data fr\'e5n SMHI\'94.\
+- RTL test: headers exist, footer text present.\
+\
+## 3) Time Utilities\
+- Implement `formatHeadingDate(date)`.\
+- Implement `formatHour(date)`.\
+- Implement `generateTodayHoursLocal()` \uc0\u8594  array of 24 Date objects.\
+- Tests for: heading format (includes Swedish month), 24 items, hour labels \'9300:00\'94, \'9323:00\'94.\
+\
+## 4) Table with Mock Rows\
+- Build mock rows array for 24 hours: set `\'97` for values, and a generic icon.\
+- Render rows; ensure 24 `<tr>`.\
+- Test: 24 rows, headers unchanged, numeric cells right-aligned via class.\
+\
+## 5) SMHI Transform (Pure)\
+- Create a **fixture JSON** (subset of SMHI): includes `timeSeries` with `validTime` (UTC) + `parameters` ([\{name, values\}]).\
+- Implement `transformSmhiToRows(json, todayHours)`; map fields & fallback to `\'97`.\
+- Tests: for given fixture, correct mapping into specific hours; missing precip yields `\'97`.\
+\
+## 6) Fetch & Integrate\
+- Implement `fetchSmhiForecast()` with fixed coords.\
+- On mount, fetch \uc0\u8594  transform \u8594  `setRows`.\
+- Test: mock `global.fetch`, assert table updates with fixture values.\
+\
+## 7) Wsymb2 Mapping & Icons\
+- Add `/src/assets/icons/` with minimal svgs (e.g., `clear.svg`, `cloudy.svg`, `rain.svg`).\
+- Implement mapping for a few codes (1..7) + default.\
+- Integrate label & icon src into rows.\
+- Test: given `Wsymb2=1`, alt is \'93Klart\'94, src ends with `clear.svg`.\
+\
+## 8) Error & Retry\
+- On fetch error, set `error` and show error box with button.\
+- Retry increments state key to re-run effect.\
+- Tests: force fetch reject, expect error UI; click retry triggers new fetch.\
+\
+## 9) A11y & Polish\
+- Ensure table has `<caption class="sr-only">V\'e4der per timme i Stockholm</caption>`.\
+- Ensure `scope="col"` on headers; alt on images.\
+- Optional zebra striping and max width container; overflow-x scroll wrapper.\
+- Test: table role, caption is present (via accessible name), headers count.\
+\
+## 10) Deploy\
+- Add `gh-pages` GitHub Action (build & deploy dist).\
+- Ensure `base` in Vite config for GH Pages path if needed.\
+- README: steps to run locally and deploy.\
+\
+---\
+\
+# TDD-Friendly Prompts (each builds on the previous; use in order)\
+\
+## Prompt 1 \'97 **Scaffold Project**\
+\\\\```text\
+You are a senior React engineer. Create a new Vite React (JavaScript) project named "stockholm-weather". Add Tailwind CSS. Configure Vitest + React Testing Library (jsdom). Add ESLint + Prettier with sane defaults.\
+\
+Deliver:\
+- package.json with scripts: dev, build, preview, test, lint, format\
+- tailwind.config.js and postcss.config.js\
+- src/index.css with Tailwind base/components/utilities\
+- src/main.jsx, src/App.jsx rendering minimal content\
+- vitest.config.js with jsdom + RTL setup\
+- .eslintrc and .prettierrc\
+\
+Add a sanity test:\
+- tests/App.sanity.test.jsx that renders <App/> and expects text "App" to be visible.\
+\
+Run tests (should pass). Commit all files.\
+\\\\```\
+\
+## Prompt 2 \'97 **Layout & Locale Basics**\
+\\\\```text\
+Update App to render:\
+- A heading with today\'92s date in Swedish long format (e.g., "onsdag 24 september 2025") using Intl.DateTimeFormat with timeZone "Europe/Stockholm".\
+- A table skeleton: <caption> (screen-reader only), <thead> with 6 fixed headers in Swedish: "Tid", "V\'e4der", "Temp (\'b0C)", "Nederb\'f6rd (mm)", "Vind (m/s)", "Luftfuktighet (%)".\
+- An empty <tbody>.\
+- A footer paragraph "Data fr\'e5n SMHI".\
+- Tailwind classes for a centered container (p-6, max-w-4xl, mx-auto).\
+\
+Write tests first in tests/App.layout.test.jsx:\
+- Renders the 6 headers.\
+- Footer text is present.\
+- Heading exists and is non-empty.\
+\
+Implement code to pass. Commit.\
+\\\\```\
+\
+## Prompt 3 \'97 **Time Utilities**\
+\\\\```text\
+Inside App.jsx (same file), implement these helpers:\
+- formatHeadingDate(date): returns Swedish long date with weekday using Intl and timeZone "Europe/Stockholm".\
+- formatHour(date): returns "HH:mm" using Intl with hour12:false and the Stockholm timeZone.\
+- generateTodayHoursLocal(now = new Date()): returns an array of 24 Date objects representing today\'92s local hours 00:00 through 23:00 in Europe/Stockholm.\
+\
+Write tests first in tests/time.utils.test.jsx:\
+- formatHeadingDate includes a Swedish month name for a fixed date.\
+- formatHour(new Date("2025-09-24T13:00:00Z")) produces "15:00" or "13:00" depending on Stockholm offset; assert that hour string is 5 chars "NN:NN" and numerically valid 00\'9623.\
+- generateTodayHoursLocal returns length 24; first label "00:00", last "23:00" when formatted with formatHour.\
+\
+Implement to pass without using external date libraries. Commit.\
+\\\\```\
+\
+## Prompt 4 \'97 **Table with 24 Mock Rows**\
+\\\\```text\
+Use generateTodayHoursLocal() to produce 24 rows on render. For each row, show:\
+- Tid: formatHour(date).\
+- V\'e4der: icon (temporary generic SVG placeholder src like "/src/assets/icons/generic.svg") and label "\'97".\
+- Temp (\'b0C), Nederb\'f6rd (mm), Vind (m/s), Luftfuktighet (%): all "\'97".\
+\
+Add /src/assets/icons/generic.svg (simple placeholder).\
+\
+Write tests first in tests/App.table.test.jsx:\
+- Renders 6 headers.\
+- Renders exactly 24 <tr> in <tbody>.\
+- The first cell of the first row is "00:00" (based on formatting) and last is "23:00" (adjust by formatHour).\
+- Numeric columns exist and currently contain "\'97".\
+\
+Implement to pass. Commit.\
+\\\\```\
+\
+## Prompt 5 \'97 **Pure Transform for SMHI JSON**\
+\\\\```text\
+Add a JSON fixture tests/fixtures/smhi-point.json representing a small subset of SMHI point forecast:\
+- Top-level \{ timeSeries: [ \{ validTime: "YYYY-MM-DDTHH:MM:SSZ", parameters: [ \{ name:"t", values:[8.5] \}, \{ name:"pmean", values:[0] \}, \{ name:"ws", values:[4.1] \}, \{ name:"r", values:[82] \}, \{ name:"Wsymb2", values:[3] \} ] \}, ... ] \}\
+Include at least 5 consecutive hourly entries spanning today in UTC so that after conversion to Europe/Stockholm they land on today\'92s local date.\
+\
+In App.jsx, implement pure function transformSmhiToRows(json, todayHoursLocal, helpers):\
+- Inputs: smhi json, array of 24 Date objects (today), and helper fns formatHour + a symbol map function (stub now).\
+- Output: an array of 24 row objects:\
+  \{ timeLabel, temp, precip, wind, humidity, weatherCode, weatherLabel, iconSrc \}\
+- For each hour (00..23 local), pick the entry whose local hour matches; if missing, use "\'97".\
+- Map parameter names: t\uc0\u8594 temp, pmean\u8594 precip, ws\u8594 wind, r\u8594 humidity; if pmean missing, try pmax/pmedian; else "\'97".\
+- weatherCode = integer from Wsymb2 values[0]; weatherLabel/icon come from a stub getSymbolInfo(weatherCode) returning \{label:"\'97", icon:"/src/assets/icons/generic.svg"\} for now.\
+\
+Write tests first in tests/smhi.transform.test.jsx:\
+- Given the fixture and todayHoursLocal mocked, the returned array has length 24.\
+- For a known hour, expect temp, wind, humidity, precip to match fixture values.\
+- Missing hour yields "\'97" values.\
+\
+Implement to pass. Commit.\
+\\\\```\
+\
+## Prompt 6 \'97 **Fetch & Integrate**\
+\\\\```text\
+In App.jsx, add async function fetchSmhiForecast():\
+- Build SMHI point URL with lon=18.0686, lat=59.3293; use fetch; parse JSON; return it.\
+- On component mount (useEffect), call fetchSmhiForecast \uc0\u8594  transformSmhiToRows \u8594  setRows.\
+\
+Initial render still shows table with 24 mock "\'97" rows produced from generateTodayHoursLocal().\
+After fetch resolves, replace rows with transformed data.\
+\
+Write tests first in tests/App.fetch.test.jsx:\
+- Mock global.fetch to resolve with the fixture JSON.\
+- Render <App/>; wait for the table to update; assert that at least one row cell contains a numeric temperature from the fixture (string matching like /\\\\d/).\
+- Ensure there is no loading spinner or loading text.\
+\
+Implement to pass; keep all logic in App.jsx; commit.\
+\\\\```\
+\
+## Prompt 7 \'97 **Wsymb2 Mapping & Icons**\
+\\\\```text\
+Create minimal icon set under /src/assets/icons/: clear.svg, partly-cloudy.svg, cloudy.svg, overcast.svg, light-rain.svg, rain.svg, fog.svg, unknown.svg.\
+\
+Add in App.jsx a constant WSYMB2 mapping (codes\uc0\u8594 \{label, icon\}):\
+- 1: Klart \uc0\u8594  clear.svg\
+- 2: L\'e4tt molnigt \uc0\u8594  partly-cloudy.svg\
+- 3: Molnigt \uc0\u8594  cloudy.svg\
+- 4: Mulet \uc0\u8594  overcast.svg\
+- 5: Dimmigt \uc0\u8594  fog.svg\
+- 6: L\'e4tt regn \uc0\u8594  light-rain.svg\
+- 7: Regn \uc0\u8594  rain.svg\
+- default: Ok\'e4nt \uc0\u8594  unknown.svg\
+\
+Replace the stub getSymbolInfo with a real function using this map.\
+Ensure V\'e4der column uses the mapped label and icon.\
+\
+Write tests first in tests/App.symbols.test.jsx:\
+- When a row has weatherCode=1, the rendered <img> has alt "Klart" and src ends with "clear.svg".\
+- For unmapped code (e.g., 99), alt "Ok\'e4nt" and src ends with "unknown.svg".\
+\
+Implement to pass. Commit.\
+\\\\```\
+\
+## Prompt 8 \'97 **Error Handling + Retry**\
+\\\\```text\
+Modify App.jsx:\
+- Add error state. If fetch throws, set error to "Kunde inte h\'e4mta prognos." and keep mock rows displayed or show empty body.\
+- Show a visible error box (Tailwind: border, bg-red-50) above the table with the message and a button "F\'f6rs\'f6k igen".\
+- Retry handler increments a key causing useEffect to rerun the fetch.\
+\
+Write tests first in tests/App.error.test.jsx:\
+- Mock fetch to reject once: expect error message visible and a "F\'f6rs\'f6k igen" button.\
+- On clicking "F\'f6rs\'f6k igen", mock fetch to resolve with fixture; expect the table to reflect data afterward.\
+\
+Implement to pass. Commit.\
+\\\\```\
+\
+## Prompt 9 \'97 **A11y & Polish**\
+\\\\```text\
+Polish styling:\
+- Wrap table in div with overflow-x-auto.\
+- table-fixed, border-collapse, odd:bg-gray-50 for rows.\
+- Right-align numeric cells via Tailwind classes.\
+- Ensure <caption className="sr-only">V\'e4der per timme i Stockholm</caption>.\
+- Ensure <th scope="col"> for each header.\
+- Use <img alt=\{label\} className="h-5 w-5">.\
+\
+Write tests first in tests/App.a11y.test.jsx:\
+- Query by role "table" and ensure it\'92s present.\
+- Ensure there are exactly 6 columnheaders.\
+- The image for a known row has the correct alt text.\
+\
+Implement to pass. Commit.\
+\\\\```\
+\
+## Prompt 10 \'97 **Deploy to GitHub Pages**\
+\\\\```text\
+Add GitHub Actions workflow at .github/workflows/gh-pages.yml:\
+- On push to main, setup Node, install, build (vite build), deploy dist/ to gh-pages branch using actions/checkout and peaceiris/actions-gh-pages or equivalent.\
+\
+If the repo requires a base path, set base in vite.config.js accordingly (e.g., /your-repo/).\
+\
+Add README.md with:\
+- run: npm i, npm run dev\
+- test: npm t\
+- build: npm run build\
+- deploy: automatic via GH Actions; enable Pages \uc0\u8594  gh-pages branch.\
+\
+No tests required for CI, but ensure local `npm run build` succeeds. Commit.\
+\\\\```\
+\
+---\
+"""\cf2 \
+\cf4 with\cf2  open(\cf3 "/mnt/data/prompt_plan.md"\cf2 , \cf3 "w"\cf2 ) \cf4 as\cf2  f:\
+    f.write(content)\
+\cf3 "/mnt/data/prompt_plan.md"}

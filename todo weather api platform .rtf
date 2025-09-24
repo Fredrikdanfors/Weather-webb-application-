@@ -1,0 +1,234 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 # TODO Checklist \'97 Stockholm 24h Weather Table (React + Tailwind)\
+\
+> Single-page app showing **today\'92s** hourly forecast for **Stockholm** (00:00\'9623:00 local). Units: **\'b0C, mm, m/s**. Locale/timezone: **sv-SE**, **Europe/Stockholm**. Data: **SMHI**. No geolocation, no loading spinner. Error state with **\'93F\'f6rs\'f6k igen\'94**. Hosted on **GitHub Pages**. One React component only.\
+\
+---\
+\
+## Pre-flight\
+- [ ] Ensure Node.js \uc0\u8805  18 and npm installed (`node -v`, `npm -v`)\
+- [ ] Ensure Git installed and GitHub repo created (private/public as desired)\
+- [ ] Clone repo locally and set `main` as default branch\
+- [ ] Confirm you can push to GitHub (`git push` works)\
+\
+---\
+\
+## Milestone 1 \'97 Scaffold & Tooling\
+- [ ] Initialize Vite React (JavaScript) project (`npm create vite@latest` \uc0\u8594  react, js)\
+- [ ] Install deps: React, ReactDOM, Vite\
+- [ ] Add Tailwind CSS (`tailwindcss`, `postcss`, `autoprefixer`), gen config files\
+- [ ] Wire Tailwind in `src/index.css` (base, components, utilities)\
+- [ ] Add Vitest + React Testing Library + jsdom; create `vitest.config.js`\
+- [ ] Add ESLint + Prettier configs (sane defaults) and npm scripts\
+- [ ] Create a minimal `App.jsx` and render it in `main.jsx`\
+- [ ] Add **sanity test**: `tests/App.sanity.test.jsx` \uc0\u8594  renders `<App/>` and finds text \'93App\'94\
+- [ ] `npm run test` passes locally\
+- [ ] Commit (`feat: scaffold project with tooling`) and push\
+\
+**Definition of done (M1):**\
+- [ ] Dev server runs, tests run green, lint/format scripts exist\
+\
+---\
+\
+## Milestone 2 \'97 Layout & Locale Basics\
+- [ ] Add container layout (`p-6 max-w-4xl mx-auto`)\
+- [ ] Heading: today\'92s date **in Swedish long format** via `Intl.DateTimeFormat('sv-SE', \{ weekday, day, month, year, timeZone:'Europe/Stockholm' \})`\
+- [ ] Table skeleton with **caption (sr-only)**, **thead** with 6 headers:\
+      `Tid`, `V\'e4der`, `Temp (\'b0C)`, `Nederb\'f6rd (mm)`, `Vind (m/s)`, `Luftfuktighet (%)`\
+- [ ] Empty **tbody**\
+- [ ] Footer: \'93Data fr\'e5n SMHI\'94\
+- [ ] Test `tests/App.layout.test.jsx`: headers exist, footer present, heading non-empty\
+- [ ] Commit (`feat: layout skeleton with Swedish date`) and push\
+\
+**Definition of done (M2):**\
+- [ ] Page renders skeleton with heading + headers + footer.\
+\
+---\
+\
+## Milestone 3 \'97 Time Utilities\
+- [ ] Implement in `App.jsx` (helpers within same file):\
+  - [ ] `formatHeadingDate(date)`\
+  - [ ] `formatHour(date)` \uc0\u8594  `"HH:mm"` w/ `timeZone:'Europe/Stockholm', hour12:false`\
+  - [ ] `generateTodayHoursLocal(now=new Date())` \uc0\u8594  **24** Date objects for 00..23 local\
+- [ ] Tests `tests/time.utils.test.jsx`:\
+  - [ ] `formatHeadingDate` contains Swedish month for a fixed date\
+  - [ ] `formatHour` yields 5-char string `NN:NN` within 00\'9623\
+  - [ ] `generateTodayHoursLocal` returns length 24; first "00:00", last "23:00"\
+- [ ] Commit (`feat: time helpers with tests`) and push\
+\
+**Definition of done (M3):**\
+- [ ] Utility functions exist, are pure, and fully tested.\
+\
+---\
+\
+## Milestone 4 \'97 Table with 24 Mock Rows\
+- [ ] Use `generateTodayHoursLocal()` to produce **24** rows\
+- [ ] Render each row with placeholders:\
+  - [ ] `Tid`: `formatHour(date)`\
+  - [ ] `V\'e4der`: placeholder icon and label \'93\'97\'94\
+  - [ ] `Temp (\'b0C)`, `Nederb\'f6rd (mm)`, `Vind (m/s)`, `Luftfuktighet (%)`: \'93\'97\'94\
+- [ ] Add `/src/assets/icons/generic.svg`\
+- [ ] Tests `tests/App.table.test.jsx`:\
+  - [ ] Renders exactly 24 `<tr>` in `<tbody>`\
+  - [ ] First hour "00:00", last hour "23:00" (formatted)\
+  - [ ] Numeric columns present and contain \'93\'97\'94\
+- [ ] Commit (`feat: render 24 mock rows`) and push\
+\
+**Definition of done (M4):**\
+- [ ] Static but correct 24-row table shows.\
+\
+---\
+\
+## Milestone 5 \'97 Pure Transform for SMHI JSON\
+- [ ] Add fixture `tests/fixtures/smhi-point.json` with several hourly entries:\
+  - [ ] Each entry: `validTime` (UTC) and `parameters` incl. `t`, `pmean`, `ws`, `r`, `Wsymb2`\
+- [ ] Implement pure fn in `App.jsx`: `transformSmhiToRows(json, todayHoursLocal, helpers)`\
+  - [ ] Convert each SMHI timestamp **from UTC to Europe/Stockholm**\
+  - [ ] Filter to **today\'92s local date**\
+  - [ ] Align by local hour to fill **exactly 24** rows (00..23)\
+  - [ ] Map params: `t`\uc0\u8594 temp, `pmean`\u8594 precip (fallback `pmedian`/`pmax`), `ws`\u8594 wind, `r`\u8594 humidity\
+  - [ ] `Wsymb2`\uc0\u8594 `weatherCode`; temporary `getSymbolInfo` returns `\{label:'\'97', icon:'/src/assets/icons/generic.svg'\}`\
+  - [ ] Missing data prints \'93\'97\'94\
+- [ ] Tests `tests/smhi.transform.test.jsx`:\
+  - [ ] Returns array length 24\
+  - [ ] For a known hour, values match fixture\
+  - [ ] Missing hour yields \'93\'97\'94\
+- [ ] Commit (`feat: pure SMHI transform with tests`) and push\
+\
+**Definition of done (M5):**\
+- [ ] Deterministic transform producing 24 aligned rows from SMHI JSON.\
+\
+---\
+\
+## Milestone 6 \'97 Fetch & Integrate\
+- [ ] Implement `fetchSmhiForecast()`:\
+  - [ ] Fixed Stockholm coords: `lat=59.3293`, `lon=18.0686`\
+  - [ ] SMHI point forecast endpoint (JSON); parse and return\
+- [ ] On mount (`useEffect`):\
+  - [ ] Call fetch \uc0\u8594  transform \u8594  `setRows`\
+  - [ ] Start render with mock rows (from M4) to avoid empty UI\
+- [ ] Tests `tests/App.fetch.test.jsx`:\
+  - [ ] Mock `global.fetch` to return fixture; render and **wait** for table updates\
+  - [ ] Assert at least one numeric temperature visible\
+  - [ ] Confirm **no loading spinner text** present\
+- [ ] Commit (`feat: fetch + integrate transform`) and push\
+\
+**Definition of done (M6):**\
+- [ ] Real data appears on page after initial render; no spinner used.\
+\
+---\
+\
+## Milestone 7 \'97 Wsymb2 Mapping & Icons\
+- [ ] Add icons in `/src/assets/icons/`:\
+  - [ ] `clear.svg`, `partly-cloudy.svg`, `cloudy.svg`, `overcast.svg`, `fog.svg`, `light-rain.svg`, `rain.svg`, `unknown.svg`\
+- [ ] Add mapping constant in `App.jsx`:\
+  - [ ] 1: Klart \uc0\u8594  `clear.svg`\
+  - [ ] 2: L\'e4tt molnigt \uc0\u8594  `partly-cloudy.svg`\
+  - [ ] 3: Molnigt \uc0\u8594  `cloudy.svg`\
+  - [ ] 4: Mulet \uc0\u8594  `overcast.svg`\
+  - [ ] 5: Dimmigt \uc0\u8594  `fog.svg`\
+  - [ ] 6: L\'e4tt regn \uc0\u8594  `light-rain.svg`\
+  - [ ] 7: Regn \uc0\u8594  `rain.svg`\
+  - [ ] default: Ok\'e4nt \uc0\u8594  `unknown.svg`\
+- [ ] Replace stub `getSymbolInfo` with real mapping\
+- [ ] Use proper **alt** text in `<img>` with Swedish label\
+- [ ] Tests `tests/App.symbols.test.jsx`:\
+  - [ ] Code `1` \uc0\u8594  alt \'93Klart\'94, src ends `clear.svg`\
+  - [ ] Unmapped code (e.g., 99) \uc0\u8594  alt \'93Ok\'e4nt\'94, src ends `unknown.svg`\
+- [ ] Commit (`feat: weather symbol mapping and icons`) and push\
+\
+**Definition of done (M7):**\
+- [ ] Correct labels and icons render; unknown codes handled gracefully.\
+\
+---\
+\
+## Milestone 8 \'97 Error Handling + Retry\
+- [ ] Add `error` state; on fetch failure set `"Kunde inte h\'e4mta prognos."`\
+- [ ] Render a **visible error box** (Tailwind: border, `bg-red-50`, text) above the table\
+- [ ] Add **\'93F\'f6rs\'f6k igen\'94** button; clicking triggers a re-fetch (e.g., state key bump)\
+- [ ] Tests `tests/App.error.test.jsx`:\
+  - [ ] Mock fetch reject \uc0\u8594  error box visible with button\
+  - [ ] Click retry \uc0\u8594  fetch resolves with fixture \u8594  table updates with data\
+- [ ] Commit (`feat: error state with retry`) and push\
+\
+**Definition of done (M8):**\
+- [ ] Recoverable error flow implemented and tested.\
+\
+---\
+\
+## Milestone 9 \'97 A11y & Polish\
+- [ ] Wrap table with `overflow-x-auto` (horizontal scroll on small screens)\
+- [ ] Table classes: `w-full table-fixed border-collapse`\
+- [ ] Zebra striping: `odd:bg-gray-50` (optional but recommended)\
+- [ ] Right-align numeric cells (`text-right`)\
+- [ ] `<caption className="sr-only">V\'e4der per timme i Stockholm</caption>`\
+- [ ] `<th scope="col">` for all headers\
+- [ ] `<img className="h-5 w-5" alt=\{label\}>` for icons\
+- [ ] Tests `tests/App.a11y.test.jsx`:\
+  - [ ] Table role present\
+  - [ ] Exactly 6 columnheaders\
+  - [ ] Image for a known row has correct alt\
+- [ ] Commit (`chore: a11y and visual polish`) and push\
+\
+**Definition of done (M9):**\
+- [ ] Accessible, clean table UI; readable on desktop; scrollable on narrow screens.\
+\
+---\
+\
+## Milestone 10 \'97 Deployment (GitHub Pages)\
+- [ ] Add `.github/workflows/gh-pages.yml` action:\
+  - [ ] On push to `main`: checkout, setup Node, install, build (`vite build`), deploy `dist/` to `gh-pages`\
+- [ ] If needed, set `base` in `vite.config.js` to match repo name\
+- [ ] In GitHub repo settings \uc0\u8594  Pages: enable Pages on `gh-pages` branch\
+- [ ] `npm run build` succeeds locally\
+- [ ] Push to `main`; verify the site is live at the Pages URL\
+- [ ] Commit (`ci: gh-pages deploy workflow`) and push\
+\
+**Definition of done (M10):**\
+- [ ] Automatic deploy on push to `main`; app loads at public URL.\
+\
+---\
+\
+## Acceptance Criteria (Project DoD)\
+- [ ] On load, heading shows Swedish long date for **today**\
+- [ ] Table displays **24 rows** for **today (00:00\'9623:00 local)** including past, current, and future hours\
+- [ ] Columns exactly: `Tid`, `V\'e4der`, `Temp (\'b0C)`, `Nederb\'f6rd (mm)`, `Vind (m/s)`, `Luftfuktighet (%)`\
+- [ ] Units: \'b0C, mm, m/s; **24-hour clock**; **sv-SE locale**\
+- [ ] Icons & Swedish labels appear; unknown codes do not break UI\
+- [ ] If fetch fails, error box + **\'93F\'f6rs\'f6k igen\'94** works\
+- [ ] Footer shows \'93Data fr\'e5n SMHI\'94\
+- [ ] No geolocation, no search, no loading indicator, no client-side caching\
+- [ ] GitHub Pages deployment works\
+\
+---\
+\
+## Manual QA Checklist\
+- [ ] Switch system clock/timezone edge cases around DST; verify hours still show 00..23 correctly\
+- [ ] Throttle network in DevTools \uc0\u8594  simulate slow network: page still renders mock rows then updates\
+- [ ] Break API URL manually \uc0\u8594  confirm error UI and working retry\
+- [ ] Validate that numbers are right-aligned; icons have alt text in Swedish\
+- [ ] Confirm that **past hours** still show data if available; missing cells are \'93\'97\'94\
+- [ ] Confirm no console errors/warnings in production build\
+\
+---\
+\
+## Housekeeping\
+- [ ] Add README with run/test/build/deploy instructions\
+- [ ] Add LICENSE (MIT or preferred)\
+- [ ] Add `.gitignore` (node_modules, dist, etc.)\
+- [ ] Create GitHub Issues/Milestones from this checklist if collaborating\
+\
+---\
+\
+## Stretch (Optional, Future)\
+- [ ] Mobile optimization beyond horizontal scroll (responsive table/cards)\
+- [ ] Expand icon map to full SMHI Wsymb2 table\
+- [ ] More robust precip handling (intensity, type)\
+- [ ] E2E smoke test with Playwright (optional)\
+- [ ] Cache-busting/version display in footer}
