@@ -87,7 +87,12 @@ export function generateTodayHoursLocal(now = new Date()) {
 }
 
 function App() {
-  const today = formatHeadingDate(new Date())
+  const now = new Date()
+  const today = formatHeadingDate(now)
+  const hourlyRows = generateTodayHoursLocal(now).map((instant) => ({
+    id: instant.toISOString(),
+    time: formatHour(instant),
+  }))
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 py-12">
@@ -112,7 +117,23 @@ function App() {
                   <th scope="col" className="py-3 font-medium uppercase tracking-wide">Luftfuktighet (%)</th>
                 </tr>
               </thead>
-              <tbody></tbody>
+              <tbody className="divide-y divide-slate-800">
+                {hourlyRows.map((row) => (
+                  <tr key={row.id} className="text-slate-200">
+                    <th scope="row" className="py-3 font-medium text-slate-100">
+                      {row.time}
+                    </th>
+                    <td className="py-3 text-slate-300">
+                      <span aria-hidden="true" className="mr-2 inline-block h-2 w-2 rounded-full bg-slate-500" />
+                      <span>—</span>
+                    </td>
+                    <td className="py-3 text-slate-300">—</td>
+                    <td className="py-3 text-slate-300">—</td>
+                    <td className="py-3 text-slate-300">—</td>
+                    <td className="py-3 text-slate-300">—</td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         </section>

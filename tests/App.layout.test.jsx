@@ -30,7 +30,13 @@ describe('App layout', () => {
 
     expect(screen.getByText('Data från SMHI')).toBeInTheDocument()
 
-    // Ensure tbody renders but is currently empty
-    expect(within(bodyGroup).queryAllByRole('row')).toHaveLength(0)
+    const bodyRows = within(bodyGroup).getAllByRole('row')
+    expect(bodyRows).toHaveLength(24)
+    const firstCells = within(bodyRows[0]).getAllByRole('cell', { hidden: false })
+    const lastCells = within(bodyRows.at(-1)).getAllByRole('cell', { hidden: false })
+    expect(within(bodyRows[0]).getByRole('rowheader')).toHaveTextContent('00:00')
+    expect(within(bodyRows.at(-1)).getByRole('rowheader')).toHaveTextContent('23:00')
+    expect(firstCells).toHaveLength(5)
+    expect(lastCells).toHaveLength(5)
   })
 })
