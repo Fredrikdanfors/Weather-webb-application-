@@ -1,0 +1,6 @@
+/* Tailwind injects base resets via this layer so our app starts from a clean slate. */
+@tailwind base;
+/* Component layer is available if we decide to compose reusable patterns with apply. */
+@tailwind components;
+/* Utility layer lets us style directly in JSX using Tailwind's generated classes. */
+@tailwind utilities;
