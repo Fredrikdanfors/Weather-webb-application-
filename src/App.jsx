@@ -1,12 +1,93 @@
 // App.jsx hosts the root application shell shown on the home route.
-function App() {
-  const today = new Intl.DateTimeFormat('sv-SE', {
+
+const STOCKHOLM_TIMEZONE = 'Europe/Stockholm'
+
+export function formatHeadingDate(date) {
+  const target = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(target.getTime())) {
+    throw new TypeError('formatHeadingDate requires a valid Date instance or value')
+  }
+
+  return new Intl.DateTimeFormat('sv-SE', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-    timeZone: 'Europe/Stockholm',
-  }).format(new Date())
+    timeZone: STOCKHOLM_TIMEZONE,
+  }).format(target)
+}
+
+export function formatHour(date) {
+  const target = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(target.getTime())) {
+    throw new TypeError('formatHour requires a valid Date instance or value')
+  }
+
+  return new Intl.DateTimeFormat('sv-SE', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+    timeZone: STOCKHOLM_TIMEZONE,
+  }).format(target)
+}
+
+function parseStockholmOffsetMinutes(instant) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: STOCKHOLM_TIMEZONE,
+    timeZoneName: 'shortOffset',
+  }).formatToParts(instant)
+
+  const offsetToken = parts.find((part) => part.type === 'timeZoneName')?.value
+  const match = offsetToken?.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/)
+  if (!match) {
+    throw new Error('Unable to determine Stockholm offset from Intl API response')
+  }
+
+  const sign = match[1] === '-' ? -1 : 1
+  const hours = Number(match[2])
+  const minutes = match[3] ? Number(match[3]) : 0
+
+  return sign * (hours * 60 + minutes)
+}
+
+export function generateTodayHoursLocal(now = new Date()) {
+  const base = now instanceof Date ? now : new Date(now)
+  if (Number.isNaN(base.getTime())) {
+    throw new TypeError('generateTodayHoursLocal requires a valid Date instance or value')
+  }
+
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: STOCKHOLM_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(base)
+
+  const partValue = (type) => {
+    const token = parts.find((part) => part.type === type)
+    if (!token) {
+      throw new Error(`Missing ${type} part when resolving Stockholm calendar day`)
+    }
+    return Number(token.value)
+  }
+
+  const year = partValue('year')
+  const month = partValue('month')
+  const day = partValue('day')
+
+  const midnightUtcGuess = Date.UTC(year, month - 1, day, 0)
+  const midnightOffsetMinutes = parseStockholmOffsetMinutes(new Date(midnightUtcGuess))
+  const stockholmMidnightUtc = midnightUtcGuess - midnightOffsetMinutes * 60 * 1000
+
+  return Array.from({ length: 24 }, (_, hour) => {
+    const instant = new Date(stockholmMidnightUtc + hour * 60 * 60 * 1000)
+    return instant
+  })
+}
+
+function App() {
+  const today = formatHeadingDate(new Date())
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 py-12">
