@@ -3,6 +3,42 @@ import { useEffect, useMemo, useState } from 'react'
 
 const STOCKHOLM_TIMEZONE = 'Europe/Stockholm'
 
+const WEATHER_SYMBOLS = {
+  1: {
+    label: 'Klart',
+    icon: '/src/assets/icons/clear.svg',
+  },
+  2: {
+    label: 'Lätt molnigt',
+    icon: '/src/assets/icons/partly-cloudy.svg',
+  },
+  3: {
+    label: 'Molnigt',
+    icon: '/src/assets/icons/cloudy.svg',
+  },
+  4: {
+    label: 'Mulet',
+    icon: '/src/assets/icons/overcast.svg',
+  },
+  5: {
+    label: 'Dimmigt',
+    icon: '/src/assets/icons/fog.svg',
+  },
+  6: {
+    label: 'Lätt regn',
+    icon: '/src/assets/icons/light-rain.svg',
+  },
+  7: {
+    label: 'Regn',
+    icon: '/src/assets/icons/rain.svg',
+  },
+}
+
+const UNKNOWN_SYMBOL = {
+  label: 'Okänt',
+  icon: '/src/assets/icons/unknown.svg',
+}
+
 export function formatHeadingDate(date) {
   const target = date instanceof Date ? date : new Date(date)
   if (Number.isNaN(target.getTime())) {
@@ -92,10 +128,10 @@ export function transformSmhiToRows(json, todayHoursLocal, helpers = {}) {
     throw new TypeError('transformSmhiToRows expected todayHoursLocal to be an array of Date instances')
   }
 
-  const { formatHour: formatHourHelper = formatHour, getSymbolInfo = () => ({
-    label: '—',
-    icon: '/src/assets/icons/generic.svg',
-  }) } = helpers
+  const {
+    formatHour: formatHourHelper = formatHour,
+    getSymbolInfo = (code) => WEATHER_SYMBOLS[code] ?? UNKNOWN_SYMBOL,
+  } = helpers
 
   const daysFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: STOCKHOLM_TIMEZONE,
@@ -157,8 +193,8 @@ export function transformSmhiToRows(json, todayHoursLocal, helpers = {}) {
       time: hourKey,
       weatherCode: data?.weatherCode ?? null,
       weather: {
-        label: symbol?.label ?? '—',
-        icon: symbol?.icon ?? '/src/assets/icons/generic.svg',
+        label: symbol?.label ?? UNKNOWN_SYMBOL.label,
+        icon: symbol?.icon ?? UNKNOWN_SYMBOL.icon,
       },
       temperature: formatMetric(data?.temperature),
       precipitation: formatMetric(data?.precipitation),
@@ -208,7 +244,7 @@ function App({ initialNow } = {}) {
     todayHours.map((instant) => ({
       id: instant.toISOString(),
       time: formatHour(instant),
-      weather: { label: '—', icon: '/src/assets/icons/generic.svg' },
+      weather: { label: UNKNOWN_SYMBOL.label, icon: UNKNOWN_SYMBOL.icon },
       temperature: '—',
       precipitation: '—',
       wind: '—',
@@ -270,7 +306,7 @@ function App({ initialNow } = {}) {
                       <span className="mr-3 inline-flex items-center gap-2">
                         <img
                           src={row.weather.icon}
-                          alt=""
+                          alt={row.weather.label}
                           className="h-6 w-6 rounded-full bg-slate-700/60 p-1"
                         />
                         <span>{row.weather.label}</span>
