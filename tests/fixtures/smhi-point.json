@@ -1,0 +1,56 @@
+{
+  "approvedTime": "2024-10-01T10:00:00Z",
+  "referenceTime": "2024-10-01T10:00:00Z",
+  "timeSeries": [
+    {
+      "validTime": "2024-10-01T10:00:00Z",
+      "parameters": [
+        { "name": "t", "unit": "Cel", "values": [9.4] },
+        { "name": "pmean", "unit": "%", "values": [42] },
+        { "name": "ws", "unit": "m/s", "values": [4.6] },
+        { "name": "r", "unit": "%", "values": [68] },
+        { "name": "Wsymb2", "unit": "", "values": [3] }
+      ]
+    },
+    {
+      "validTime": "2024-10-01T11:00:00Z",
+      "parameters": [
+        { "name": "t", "unit": "Cel", "values": [10.1] },
+        { "name": "pmean", "unit": "%", "values": [35] },
+        { "name": "ws", "unit": "m/s", "values": [5.2] },
+        { "name": "r", "unit": "%", "values": [64] },
+        { "name": "Wsymb2", "unit": "", "values": [1] }
+      ]
+    },
+    {
+      "validTime": "2024-10-01T12:00:00Z",
+      "parameters": [
+        { "name": "t", "unit": "Cel", "values": [10.9] },
+        { "name": "pmean", "unit": "%", "values": [20] },
+        { "name": "ws", "unit": "m/s", "values": [6.1] },
+        { "name": "r", "unit": "%", "values": [59] },
+        { "name": "Wsymb2", "unit": "", "values": [2] }
+      ]
+    },
+    {
+      "validTime": "2024-10-01T13:00:00Z",
+      "parameters": [
+        { "name": "t", "unit": "Cel", "values": [11.5] },
+        { "name": "pmean", "unit": "%", "values": [15] },
+        { "name": "ws", "unit": "m/s", "values": [7.3] },
+        { "name": "r", "unit": "%", "values": [56] },
+        { "name": "Wsymb2", "unit": "", "values": [4] }
+      ]
+    },
+    {
+      "validTime": "2024-10-01T14:00:00Z",
+      "parameters": [
+        { "name": "t", "unit": "Cel", "values": [11.8] },
+        { "name": "pmean", "unit": "%", "values": [18] },
+        { "name": "ws", "unit": "m/s", "values": [7.8] },
+        { "name": "r", "unit": "%", "values": [54] },
+        { "name": "Wsymb2", "unit": "", "values": [5] }
+      ]
+    }
+  ]
+}

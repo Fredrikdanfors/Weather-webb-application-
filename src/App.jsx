@@ -86,6 +86,87 @@ export function generateTodayHoursLocal(now = new Date()) {
   })
 }
 
+export function transformSmhiToRows(json, todayHoursLocal, helpers = {}) {
+  if (!Array.isArray(todayHoursLocal)) {
+    throw new TypeError('transformSmhiToRows expected todayHoursLocal to be an array of Date instances')
+  }
+
+  const { formatHour: formatHourHelper = formatHour, getSymbolInfo = () => ({
+    label: '—',
+    icon: '/src/assets/icons/generic.svg',
+  }) } = helpers
+
+  const daysFormatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: STOCKHOLM_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+
+  const todayKey = todayHoursLocal.length
+    ? daysFormatter.format(todayHoursLocal[0])
+    : daysFormatter.format(new Date())
+
+  const safeNumber = (value) => (Number.isFinite(value) ? value : null)
+  const parametersToMap = (parameters = []) => {
+    return parameters.reduce((acc, param) => {
+      if (param && typeof param.name === 'string') {
+        acc[param.name] = Array.isArray(param.values) ? param.values[0] : undefined
+      }
+      return acc
+    }, {})
+  }
+
+  const formatMetric = (value) => {
+    const numeric = safeNumber(value)
+    return numeric ?? '—'
+  }
+
+  const entryMap = new Map()
+
+  for (const item of json?.timeSeries ?? []) {
+    const instant = new Date(item?.validTime ?? NaN)
+    if (Number.isNaN(instant.getTime())) continue
+
+    if (daysFormatter.format(instant) !== todayKey) continue
+
+    const hourKey = formatHourHelper(instant)
+    const map = parametersToMap(item.parameters)
+
+    const precipitation = safeNumber(
+      map.pmean ?? map.pmedian ?? map.pmax ?? null,
+    )
+
+    entryMap.set(hourKey, {
+      temperature: safeNumber(map.t ?? null),
+      precipitation,
+      wind: safeNumber(map.ws ?? null),
+      humidity: safeNumber(map.r ?? null),
+      weatherCode: map.Wsymb2 ?? null,
+    })
+  }
+
+  return todayHoursLocal.map((instant) => {
+    const hourKey = formatHourHelper(instant)
+    const data = entryMap.get(hourKey)
+    const symbol = getSymbolInfo(data?.weatherCode)
+
+    return {
+      id: instant.toISOString(),
+      time: hourKey,
+      weatherCode: data?.weatherCode ?? null,
+      weather: {
+        label: symbol?.label ?? '—',
+        icon: symbol?.icon ?? '/src/assets/icons/generic.svg',
+      },
+      temperature: formatMetric(data?.temperature),
+      precipitation: formatMetric(data?.precipitation),
+      wind: formatMetric(data?.wind),
+      humidity: formatMetric(data?.humidity),
+    }
+  })
+}
+
 function App() {
   const now = new Date()
   const today = formatHeadingDate(now)
