@@ -1,9 +1,11 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import App from '../src/App.jsx'
 
 describe('App layout', () => {
-  it('renders hourly forecast table headers, footer, and populated title', () => {
+  it('renders hourly forecast table headers, footer, and populated title', async () => {
     render(<App />)
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
 
     const heading = screen.getByRole('heading', { level: 1 })
     expect(heading).toBeInTheDocument()

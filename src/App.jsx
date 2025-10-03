@@ -1,4 +1,5 @@
 // App.jsx hosts the root application shell shown on the home route.
+import { useEffect, useMemo, useState } from 'react'
 
 const STOCKHOLM_TIMEZONE = 'Europe/Stockholm'
 
@@ -167,13 +168,74 @@ export function transformSmhiToRows(json, todayHoursLocal, helpers = {}) {
   })
 }
 
-function App() {
-  const now = new Date()
+export async function fetchSmhiForecast({ signal } = {}) {
+  const latitude = 59.3293
+  const longitude = 18.0686
+  const endpoint = `https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/${longitude}/lat/${latitude}/data.json`
+
+  const response = await fetch(endpoint, {
+    headers: {
+      Accept: 'application/json',
+    },
+    signal,
+  })
+
+  if (!response.ok) {
+    throw new Error(`SMHI forecast request failed with status ${response.status}`)
+  }
+
+  return response.json()
+}
+
+function App({ initialNow } = {}) {
+  const now = useMemo(() => {
+    if (initialNow instanceof Date) {
+      return new Date(initialNow.getTime())
+    }
+
+    if (initialNow !== undefined) {
+      const parsed = new Date(initialNow)
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed
+      }
+    }
+
+    return new Date()
+  }, [initialNow])
   const today = formatHeadingDate(now)
-  const hourlyRows = generateTodayHoursLocal(now).map((instant) => ({
-    id: instant.toISOString(),
-    time: formatHour(instant),
-  }))
+  const todayHours = useMemo(() => generateTodayHoursLocal(now), [now])
+  const [rows, setRows] = useState(() =>
+    todayHours.map((instant) => ({
+      id: instant.toISOString(),
+      time: formatHour(instant),
+      weather: { label: '—', icon: '/src/assets/icons/generic.svg' },
+      temperature: '—',
+      precipitation: '—',
+      wind: '—',
+      humidity: '—',
+    })),
+  )
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchSmhiForecast()
+      .then((data) => {
+        if (cancelled) return
+        const nextRows = transformSmhiToRows(data, todayHours, {
+          formatHour,
+        })
+        setRows(nextRows)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        console.error('Failed to fetch SMHI forecast', error)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [todayHours])
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 py-12">
@@ -199,19 +261,25 @@ function App() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {hourlyRows.map((row) => (
+                {rows.map((row) => (
                   <tr key={row.id} className="text-slate-200">
                     <th scope="row" className="py-3 font-medium text-slate-100">
                       {row.time}
                     </th>
                     <td className="py-3 text-slate-300">
-                      <span aria-hidden="true" className="mr-2 inline-block h-2 w-2 rounded-full bg-slate-500" />
-                      <span>—</span>
+                      <span className="mr-3 inline-flex items-center gap-2">
+                        <img
+                          src={row.weather.icon}
+                          alt=""
+                          className="h-6 w-6 rounded-full bg-slate-700/60 p-1"
+                        />
+                        <span>{row.weather.label}</span>
+                      </span>
                     </td>
-                    <td className="py-3 text-slate-300">—</td>
-                    <td className="py-3 text-slate-300">—</td>
-                    <td className="py-3 text-slate-300">—</td>
-                    <td className="py-3 text-slate-300">—</td>
+                    <td className="py-3 text-slate-300">{row.temperature}</td>
+                    <td className="py-3 text-slate-300">{row.precipitation}</td>
+                    <td className="py-3 text-slate-300">{row.wind}</td>
+                    <td className="py-3 text-slate-300">{row.humidity}</td>
                   </tr>
                 ))}
               </tbody>

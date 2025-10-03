@@ -1,9 +1,11 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import App from '../src/App.jsx'
 
 describe('App hourly table', () => {
-  it('renders 24 rows with placeholder numeric columns', () => {
+  it('renders 24 rows with placeholder numeric columns', async () => {
     render(<App />)
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
 
     const table = screen.getByRole('table', {
       name: /prognos för stockholms timvisa väderuppdateringar/i,
