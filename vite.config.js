@@ -6,4 +6,5 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   // Activate the official React plugin for JSX and fast refresh support.
   plugins: [react()],
+  base: '/Weather-webb-application-/',
 })
