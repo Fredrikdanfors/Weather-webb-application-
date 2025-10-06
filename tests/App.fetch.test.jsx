@@ -29,6 +29,16 @@ describe('App SMHI integration', () => {
 
     await waitFor(() => {
       expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()
+      expect(screen.queryByText('Kunde inte hämta prognos.')).not.toBeInTheDocument()
     })
+  })
+
+  it('surfaces an error message when the forecast fetch fails', async () => {
+    fetch.mockRejectedValueOnce(new Error('network down'))
+
+    render(<App initialNow={new Date('2024-10-01T12:00:00+02:00')} />)
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Kunde inte hämta prognos.')
   })
 })

@@ -251,6 +251,8 @@ function App({ initialNow } = {}) {
       humidity: '—',
     })),
   )
+  const [error, setError] = useState(null)
+  const [reloadCount, setReloadCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -262,16 +264,18 @@ function App({ initialNow } = {}) {
           formatHour,
         })
         setRows(nextRows)
+        setError(null)
       })
       .catch((error) => {
         if (cancelled) return
         console.error('Failed to fetch SMHI forecast', error)
+        setError('Kunde inte hämta prognos.')
       })
 
     return () => {
       cancelled = true
     }
-  }, [todayHours])
+  }, [todayHours, reloadCount])
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 py-12">
@@ -321,6 +325,20 @@ function App({ initialNow } = {}) {
               </tbody>
             </table>
           </div>
+          {error && (
+            <div className="mt-4 flex flex-col items-center gap-3">
+              <p className="text-sm font-medium text-rose-300" role="alert">
+                {error}
+              </p>
+              <button
+                type="button"
+                onClick={() => setReloadCount((count) => count + 1)}
+                className="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-rose-50 transition hover:bg-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2 focus:ring-offset-slate-800"
+              >
+                Försök igen
+              </button>
+            </div>
+          )}
         </section>
       </div>
       <footer className="mt-10 text-sm text-slate-500">
