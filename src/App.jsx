@@ -288,8 +288,8 @@ function App({ initialNow } = {}) {
             Grunden är klar. Nästa steg är att bygga vädertavlan för dagens timmar.
           </p>
           <div className="mt-8 overflow-x-auto">
-            <table className="w-full min-w-[640px] divide-y divide-slate-700 text-left text-sm">
-              <caption className="sr-only">Prognos för Stockholms timvisa väderuppdateringar</caption>
+            <table className="w-full min-w-[640px] table-fixed border-collapse divide-y divide-slate-700 text-left text-sm">
+              <caption className="sr-only">Väder per timme i Stockholm</caption>
               <thead className="text-slate-400">
                 <tr>
                   <th scope="col" className="py-3 font-medium uppercase tracking-wide">Tid</th>
@@ -311,15 +311,15 @@ function App({ initialNow } = {}) {
                         <img
                           src={row.weather.icon}
                           alt={row.weather.label}
-                          className="h-6 w-6 rounded-full bg-slate-700/60 p-1"
+                          className="h-5 w-5 rounded-full bg-slate-700/60 p-1"
                         />
                         <span>{row.weather.label}</span>
                       </span>
                     </td>
-                    <td className="py-3 text-slate-300">{row.temperature}</td>
-                    <td className="py-3 text-slate-300">{row.precipitation}</td>
-                    <td className="py-3 text-slate-300">{row.wind}</td>
-                    <td className="py-3 text-slate-300">{row.humidity}</td>
+                    <td className="py-3 text-right text-slate-300">{row.temperature}</td>
+                    <td className="py-3 text-right text-slate-300">{row.precipitation}</td>
+                    <td className="py-3 text-right text-slate-300">{row.wind}</td>
+                    <td className="py-3 text-right text-slate-300">{row.humidity}</td>
                   </tr>
                 ))}
               </tbody>
