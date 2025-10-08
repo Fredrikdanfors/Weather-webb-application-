@@ -285,7 +285,9 @@ function App({ initialNow } = {}) {
           <h1 className="text-3xl font-semibold">Stockholm Weather</h1>
           <h2 className="mt-2 text-lg font-medium capitalize">{today}</h2>
           <p className="mt-3 text-base text-slate-300">
-            Grunden är klar. Nästa steg är att bygga vädertavlan för dagens timmar.
+            Den här sidan visar SMHI:s timvisa prognos för Stockholm med svensk
+            tid, etiketter och en snabb vy över temperatur, nederbörd, vind och
+            luftfuktighet.
           </p>
           <div className="mt-8 overflow-x-auto">
             <table className="w-full min-w-[640px] table-fixed border-collapse divide-y divide-slate-700 text-left text-sm">
